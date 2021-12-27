@@ -1,6 +1,6 @@
 from time import time
 import cv2
-from hand_detector import HandDetector
+from hands_module.hand_detector import HandDetector
 
 
 if __name__ == "__main__":

@@ -5,6 +5,18 @@ import mediapipe as mp
 class HandDetector:
     """Hand detector class"""
 
+    THUMB_TIP_INDEX = 4
+    THUMB_THRESHOLD_LANDMARK = 3
+    INDEX_FINGER_TIP_INDEX = 8
+    INDEX_FINGER_THRESHOLD_LANDMARK = 6
+    MIDDLE_FINGER_TIP_INDEX = 12
+    MIDDLE_FINGER_THRESHOLD_LANDMARK = 10
+    RING_FINGER_TIP_INDEX = 16
+    RING_FINGER_THRESHOLD_LANDMARK = 14
+    PINKY_TIP_INDEX = 20
+    PINKY_THRESHOLD_LANDMARK = 18
+    OFFSET = 4
+
     def __init__(self, num_hands=1, min_detection_conf=0.5, min_track_conf=0.5) -> None:
         self.num_hands = num_hands
         self.min_detection_conf = min_detection_conf
@@ -35,8 +47,6 @@ class HandDetector:
                         img,
                         hand_landmark,
                         self._mp_model.HAND_CONNECTIONS,
-                        self._mp_drawing_styles.get_default_hand_landmarks_style(),
-                        self._mp_drawing_styles.get_default_hand_connections_style(),
                     )
 
         return img
@@ -68,3 +78,38 @@ class HandDetector:
             tip_position = (pos_x, pos_y)
 
         return tip_position
+
+    def count_fingers(self, img, hand_no=0):
+        """Count number of fingers that are up"""
+        landmarks = self.get_landmarks_positions(img, hand_no)
+        num_fingers_up = 0
+        up_fingers = [0] * 5
+
+        # check whether the finger is up or closed based on the tip position against other finger landmark
+        # if tip of the finger is below the value of landmark that is lower on the finger, finger is considered closed
+        if landmarks:
+
+            # get tips positions of all fingers - for thumb use x position, for others y position
+            tips_positions = [
+                landmarks[self.THUMB_TIP_INDEX][1],
+                landmarks[self.INDEX_FINGER_TIP_INDEX][2],
+                landmarks[self.MIDDLE_FINGER_TIP_INDEX][2],
+                landmarks[self.RING_FINGER_TIP_INDEX][2],
+                landmarks[self.PINKY_TIP_INDEX][2],
+            ]
+
+            thresholds_positions = [
+                landmarks[self.THUMB_THRESHOLD_LANDMARK][1],
+                landmarks[self.INDEX_FINGER_THRESHOLD_LANDMARK][2],
+                landmarks[self.MIDDLE_FINGER_THRESHOLD_LANDMARK][2],
+                landmarks[self.RING_FINGER_THRESHOLD_LANDMARK][2],
+                landmarks[self.PINKY_THRESHOLD_LANDMARK][2],
+            ]
+
+            # check if the finger is up
+            for finger in range(5):
+                up_fingers[finger] = tips_positions[finger] < thresholds_positions[finger]
+
+            num_fingers_up = sum(up_fingers)
+
+        return num_fingers_up, up_fingers

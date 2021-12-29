@@ -41,22 +41,22 @@ class Painter:
             # state 0 = initial state, check num fingers
             if state == PainterState.INITIAL_STATE:
                 if num_fingers == 2 and up_fingers[self.INDEX_FINGER_UP_IDX] and up_fingers[self.MIDDLE_FINGER_UP_IDX]:
-                    state = 1
+                    state = PainterState.NO_DRAWING
                 elif num_fingers == 1 and up_fingers[self.INDEX_FINGER_UP_IDX]:
-                    state = 2
+                    state = PainterState.DRAWING
                 elif num_fingers == 5:
-                    state = 4
+                    state = PainterState.CAPTURE_IMAGE
             # index finger and middle fingers are up
             elif state == PainterState.NO_DRAWING:
                 brush_position = (0, 0)
                 if num_fingers == 2 and up_fingers[self.INDEX_FINGER_UP_IDX] and up_fingers[self.MIDDLE_FINGER_UP_IDX]:
-                    state = 1
+                    state = PainterState.NO_DRAWING
                 elif num_fingers == 1 and up_fingers[self.INDEX_FINGER_UP_IDX]:
-                    state = 2
+                    state = PainterState.DRAWING
                 elif num_fingers == 0:
-                    state = 3
+                    state = PainterState.CLEAR_IMAGE
                 elif num_fingers == 5:
-                    state = 4
+                    state = PainterState.CAPTURE_IMAGE
             # only index finger is up - drawing
             elif state == PainterState.DRAWING:
                 index_finger_tip_pos = landmarks[self.INDEX_FINGER_TIP][1:]
@@ -71,28 +71,28 @@ class Painter:
                 # set new start
                 brush_position = index_finger_tip_pos
                 if num_fingers == 1 and up_fingers[self.INDEX_FINGER_UP_IDX]:
-                    state = 2
+                    state = PainterState.DRAWING
                 elif (
                     num_fingers == 2 and up_fingers[self.INDEX_FINGER_UP_IDX] and up_fingers[self.MIDDLE_FINGER_UP_IDX]
                 ):
-                    state = 1
+                    state = PainterState.NO_DRAWING
                 elif num_fingers == 5:
-                    state = 4
+                    state = PainterState.CAPTURE_IMAGE
             # close index and middle finger - gesture to clear drawn image
             elif state == PainterState.CLEAR_IMAGE:
                 canvas.fill(0)
-                state = 0
+                state = PainterState.INITIAL_STATE
             # all fingers are up
             elif state == PainterState.CAPTURE_IMAGE:
                 if num_fingers == 0:
                     cv2.imwrite("drawing.png", canvas)
-                    state = 4
+                    state = PainterState.CAPTURE_IMAGE
                 elif (
                     num_fingers == 2 and up_fingers[self.INDEX_FINGER_UP_IDX] and up_fingers[self.MIDDLE_FINGER_UP_IDX]
                 ):
-                    state = 1
+                    state = PainterState.NO_DRAWING
                 elif num_fingers == 1 and up_fingers[self.INDEX_FINGER_UP_IDX]:
-                    state = 2
+                    state = PainterState.DRAWING
 
         img = cv2.addWeighted(img, 0.5, canvas, 0.5, 0)
         cv2.imshow("Img", img)
